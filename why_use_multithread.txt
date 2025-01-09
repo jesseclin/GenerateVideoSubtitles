@@ -1,0 +1,26 @@
+在本程式中，分析的核心部分使用多線呈來處理，原因是因為，因不明原因導致，分析完成後，程式會直接離開迴圈，而不會回主選單，
+然而，其實分析是有完成的，只是不知為何分析完後會有此情況，不確定這是否是預期行為，可能與CTranslate2有關，請注意，僅為可能，原因未知
+請參考
+https://github.com/OpenNMT/CTranslate2/issues/1782
+https://github.com/SYSTRAN/faster-whisper/issues/71
+
+使用多線呈可以解決此狀況，因為就算該分析程式因任何狀況退出，僅會退出它所在的那個線呈，而不會影響到主選單所在的主線呈
+
+
+In this program, the core part of the analysis is handled using multithreading. 
+This is because, for unknown reasons, after the analysis is completed, 
+the program exits the loop directly instead of returning to the main menu.
+
+However, the analysis is indeed completed successfully, 
+but it is unclear why this behavior occurs afterward. 
+It is not certain if this is the intended behavior and it might be related to CTranslate2. 
+Please note that this is only a possibility, and the exact cause is unknown.
+
+For reference, please see:
+
+https://github.com/OpenNMT/CTranslate2/issues/1782
+https://github.com/SYSTRAN/faster-whisper/issues/71
+
+Using multithreading can resolve this issue because, 
+even if the analysis program exits unexpectedly due to any reason, 
+it will only exit the thread it is running on and will not affect the main thread where the main menu resides.
