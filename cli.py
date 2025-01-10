@@ -4,8 +4,9 @@ from download import Download
 import convert as now_convert
 import sys
 import outputSubtitles 
+import multiprocessing
 from multiprocessing import Process, Manager
-
+import torch
 """
 Function:
     get_file_name(input_file_path): Get the file name without the extension.
@@ -33,10 +34,11 @@ def convert_to_wav(filename):
     return new_name
 
 def run_model(filename, sel_lang_option, selected_option):
-    print("初始化...")
+    
     with Manager() as manager:
         # Create a shared list to store the result
         return_list = manager.list()
+        print("初始化...")
         processor = speechToTextOnWhisperModel()
         processor.setDeviceSetting('cuda')
         processor.setComputeTypeSetting('float16')
@@ -117,8 +119,11 @@ def main():
     args:
         input_text: str: the input text. It can be a video URL or a local file path.
         selected_option: str: the selected model size.
+        selected_option_index (int): the index of the selected model size.
         sel_lang_option: str: the selected language option.
+        sel_lang_option_index (int): the index of the selected language option.
         output_selected_option: can be "txt" or "srt".
+        output_selected_option_index (int): the index of the selected output option.
     steps:
         1. show the main menu
         2. get the user's choice
@@ -138,6 +143,15 @@ def main():
                 3.6.3 output the result to a file
         4. if the user chooses 2, exit the program
     """
+
+    # check if CUDA is available
+    if torch.cuda.is_available():
+        print("CUDA is available")
+    else:
+        print("CUDA is not available")
+        exit()
+
+    # show the main menu
     while True:
         print("\n主選單:")
         print("1. 分析影片/音訊")
@@ -194,7 +208,10 @@ def main():
 
 
 if __name__ == "__main__":
+    
     try:
+        # Resolve the issue where multiprocessing does not work after packaging with pyinstaller
+        multiprocessing.freeze_support()
         main()
     except Exception as e:
         print(f"程序遇到未處理的異常：{e}")

@@ -36,9 +36,13 @@ class speechToTextOnWhisperModel:
         filename = os.path.abspath(filename)
         if not os.path.exists(filename):
             raise FileNotFoundError(f"檔案 {filename} 不存在，請確認路徑是否正確。")
+        
         print("加載模型中...")
         # Load the model
-        model = WhisperModel(self.model_size, device=self.device, compute_type=self.compute_type)
+        try:
+            model = WhisperModel(self.model_size, device=self.device, compute_type=self.compute_type)
+        except Exception as e:
+            raise ValueError(f"模型加載失敗: {e}")
         print("模型加載完成。")
         print("處理中...")
 
@@ -49,16 +53,20 @@ class speechToTextOnWhisperModel:
         # English: English
         # Japanese: Japanese
         # transcript the audio file
-        if sel_lang_option == "Auto":
-            segments,_ = model.transcribe(filename, beam_size=5,log_progress=True)
-            return_list[:] = list(segments)
-        elif sel_lang_option == "Chinese":
-            segments, _ = model.transcribe(filename, beam_size=5, language="zh",log_progress=True)
-            return_list[:] = list(segments)
-        elif sel_lang_option == "English":
-            segments, _ = model.transcribe(filename, beam_size=5, language="en",log_progress=True)
-            return_list[:] = list(segments)
-        elif sel_lang_option == "Japanese":
-            segments, _ = model.transcribe(filename, beam_size=5, language="ja",log_progress=True)
-            return_list[:] = list(segments)
+        try:
+
+            if sel_lang_option == "Auto":
+                segments,_ = model.transcribe(filename, beam_size=5,log_progress=True)
+                return_list[:] = list(segments)
+            elif sel_lang_option == "Chinese":
+                segments, _ = model.transcribe(filename, beam_size=5, language="zh",log_progress=True)
+                return_list[:] = list(segments)
+            elif sel_lang_option == "English":
+                segments, _ = model.transcribe(filename, beam_size=5, language="en",log_progress=True)
+                return_list[:] = list(segments)
+            elif sel_lang_option == "Japanese":
+                segments, _ = model.transcribe(filename, beam_size=5, language="ja",log_progress=True)
+                return_list[:] = list(segments)
+        except Exception as e:
+            raise ValueError(f"模型運行失敗: {e}")
     
