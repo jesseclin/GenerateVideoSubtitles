@@ -1,4 +1,5 @@
 from faster_whisper import WhisperModel
+import stable_whisper
 import os
 class speechToTextOnWhisperModel:
     """
@@ -40,7 +41,12 @@ class speechToTextOnWhisperModel:
         print("加載模型中...")
         # Load the model
         try:
-            model = WhisperModel(self.model_size, device=self.device, compute_type=self.compute_type)
+            if self.model_size == 'stable_whisper':
+                model = stable_whisper.load_model('base')
+            elif self.model_size == 'stable_whisper-hf':
+                model = stable_whisper.load_hf_whisper('base')
+            else:
+                model = WhisperModel(self.model_size, device=self.device, compute_type=self.compute_type)
         except Exception as e:
             raise ValueError(f"模型加載失敗: {e}")
         print("模型加載完成。")
@@ -56,7 +62,12 @@ class speechToTextOnWhisperModel:
         try:
 
             if sel_lang_option == "Auto":
-                segments,_ = model.transcribe(filename, beam_size=5,log_progress=True)
+                if self.model_size == 'stable_whisper':
+                    segments = model.transcribe(filename, beam_size=5)
+                elif self.model_size == 'stable_whisper-hf':
+                    segments = model.transcribe(filename)
+                else:
+                    segments,_ = model.transcribe(filename, beam_size=5,log_progress=True)
                 return_list[:] = list(segments)
             elif sel_lang_option == "Chinese":
                 segments, _ = model.transcribe(filename, beam_size=5, language="zh",log_progress=True)

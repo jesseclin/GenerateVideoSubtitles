@@ -5,7 +5,7 @@ import convert as now_convert
 import sys
 import outputSubtitles 
 import multiprocessing
-from multiprocessing import Process, Manager
+from multiprocessing import Process, Manager, set_start_method
 import torch
 """
 Function:
@@ -79,7 +79,10 @@ def process_online_input(input_text, selected_option, output_selected_option, se
     download = Download(input_text, "./")
     print("下載中...")
     filename = download.download_m4a()
-    wav_name = convert_to_wav(filename)
+    if not os.path.isfile(os.path.splitext(filename)[0]+'.wav'):
+        wav_name = convert_to_wav(filename)
+    else:
+        wav_name = os.path.splitext(filename)[0]+'.wav'
     run_model_result = run_model(wav_name, sel_lang_option, selected_option)
     output_result(run_model_result, wav_name, output_selected_option)
     print("處理完成，返回主選單")
@@ -151,6 +154,12 @@ def main():
         print("CUDA is not available")
         exit()
 
+    try:
+        set_start_method('spawn', force=True)
+        print("spawned")
+    except RuntimeError:
+        pass
+
     # show the main menu
     while True:
         print("\n主選單:")
@@ -160,12 +169,17 @@ def main():
         if choice == '1':
             print("歡迎使用語音轉文字系統")
             input_text = input("請輸入影片網址或本地檔案路徑: ")
-
-            model_options = ["tiny", "small", "medium", "large", "large-v2", "large-v3", "large-v3-turbo", "turbo"]
+            if input_text.endswith('.txt') and os.path.isfile(input_text):
+                with open(input_text) as file:
+                    input_text_list = [line.rstrip() for line in file]
+            else:
+                input_text_list = [input_text]
+            print(input_text_list)
+            model_options = ["tiny", "small", "medium", "large", "large-v2", "large-v3", "large-v3-turbo", "turbo", "stable_whisper", "stable_whisper-hf"]
             print("請選擇模型大小:")
             for idx, option in enumerate(model_options, 1):
                 print(f"{idx}. {option}")
-            selected_option_index = int(input("輸入選項編號 (默認為 5): ") or 5) - 1
+            selected_option_index = int(input("輸入選項編號 (默認為 10): ") or 10) - 1
             selected_option = model_options[selected_option_index]
 
 
@@ -186,15 +200,18 @@ def main():
 
 
             try:
-                if input_text.startswith("https"):
-                    try:
-                        process_online_input(input_text, selected_option, output_selected_option, sel_lang_option)
-                    except Exception as e:
-                        print(f"處理過程中發生錯誤: {str(e)}")
-                        with open("error_log.txt", "a") as log_file:
-                            log_file.write(f"Process Error: {str(e)}\n")
-                else:
-                    process_local_file(input_text, selected_option, output_selected_option, sel_lang_option)
+                print(input_text_list)
+                for input_text in input_text_list:
+                    
+                    if input_text.startswith("https"):
+                        try:
+                            process_online_input(input_text, selected_option, output_selected_option, sel_lang_option)
+                        except Exception as e:
+                            print(f"處理過程中發生錯誤: {str(e)}")
+                            with open("error_log.txt", "a") as log_file:
+                                log_file.write(f"Process Error: {str(e)}\n")
+                    else:
+                        process_local_file(input_text, selected_option, output_selected_option, sel_lang_option)
             except Exception as e:
                 print(f"發生錯誤: {str(e)}")
                 with open("error_log.txt", "a") as log_file:

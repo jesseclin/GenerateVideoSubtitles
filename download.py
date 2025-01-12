@@ -1,6 +1,8 @@
 import yt_dlp
 import re
 from tqdm import tqdm
+import os.path
+
 class Download:
     """
     A class to download audio files from YouTube using yt-dlp.
@@ -57,7 +59,11 @@ class Download:
             info = ydl.extract_info(self.url, download=False)
             print("影音長度："+str(info['duration'])+"秒")
             progress_bar = tqdm(total=100, desc="下載進度：", unit="%")
-            ydl.download(self.url)
             filename = ydl.prepare_filename(info)
+
+            print(filename)
+            if not os.path.isfile(os.path.splitext(filename)[0]+'.wav'):
+                ydl.download(self.url)
+            
             # Return the file name, which refers to the path, for example: ./video_id.m4a
             return filename
